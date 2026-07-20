@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>胸外科手术数据分析看板</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 32h28M32 18v28' stroke='white' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 加载 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <!-- 加载 PapaParse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #334155; }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 1.5rem; border: 1px solid #e2e8f0; }
+        .scroller::-webkit-scrollbar { width: 6px; }
+        .scroller::-webkit-scrollbar-track { background: #f1f1f1; }
+        .scroller::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.2rem center;
+            background-repeat: no-repeat;
+            background-size: 1.25em 1.25em;
+            padding-right: 1.5rem;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 flex items-center">
+                <i class="fas fa-sort-amount-down text-indigo-600 mr-3"></i>
+                胸外科手术多维分析
+            </h1>
+            <p class="text-slate-500 text-sm mt-1 ml-1 flex items-center gap-2">
+                <span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-semibold">定制排序</span>
+                支持自定义医疗组与医生分组
+                <span class="text-gray-300">|</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold">优先读取</span>
+                含“分类”列优先
+            </p>
+        </div>
+        <div class="relative">
+            <input type="file" id="csvInput" accept=".csv" class="hidden" />
+            <label for="csvInput" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg shadow-sm transition flex items-center gap-2 font-medium focus-within:ring-2 focus-within:ring-indigo-400 focus-within:ring-offset-2">
+                <i class="fas fa-file-upload"></i> 上传CSV数据
+            </label>
+            <p id="fileStatus" class="text-xs text-slate-500 mt-2 text-right" aria-live="polite">当前展示：匿名演示数据</p>
+        </div>
+    </div>
+
+    <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-start gap-3" role="note">
+        <i class="fas fa-shield-alt mt-0.5" aria-hidden="true"></i>
+        <div>
+            <span class="font-semibold">隐私说明：</span>CSV 文件仅在当前浏览器中解析，不会上传到服务器。公开分享截图或导出结果前，仍请移除姓名、证件号、住院号等身份信息。
+        </div>
+    </div>
+
+    <!-- Group Settings -->
+    <div class="card mb-6 bg-slate-50 border-slate-200">
+        <button type="button" class="flex w-full justify-between items-center mb-3 cursor-pointer select-none text-left" onclick="toggleSettings()" aria-expanded="false" aria-controls="groupSettingsPanel" id="groupSettingsToggle">
+            <span class="text-md font-bold text-slate-700 flex items-center">
+                <i class="fas fa-users-cog mr-2 text-slate-500"></i>
+                医疗组设置
+                <span class="ml-3 text-xs font-normal text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">点击展开/折叠</span>
+            </span>
+            <i id="toggleIcon" class="fas fa-chevron-down text-slate-400 transition-transform"></i>
+        </button>
+
+        <div id="groupSettingsPanel" class="hidden transition-all duration-300">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm scroller max-h-[200px] overflow-y-auto pr-2 mb-3" id="doctorGroupInputs"></div>
+            <div class="flex justify-end pt-2 border-t border-slate-200">
+                <button type="button" onclick="applyGroupSettings()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-1.5 rounded text-sm transition shadow-sm">
+                    <i class="fas fa-sync-alt mr-1"></i> 应用分组设置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="card border-t-4 border-blue-500">
+            <div class="text-slate-500 text-xs font-bold uppercase tracking-wide">总手术量</div>
+            <div class="text-3xl font-bold text-slate-800 mt-2" id="totalCount">0</div>
+        </div>
+        <div class="card border-t-4 border-emerald-500">
+            <div class="text-slate-500 text-xs font-bold uppercase tracking-wide">医疗组数</div>
+            <div class="text-3xl font-bold text-slate-800 mt-2" id="groupCount">0</div>
+        </div>
+        <div class="card border-t-4 border-rose-500">
+            <div class="text-slate-500 text-xs font-bold uppercase tracking-wide">袖式切除 (主手术)</div>
+            <div class="text-3xl font-bold text-slate-800 mt-2" id="sleeveCount">0</div>
+        </div>
+        <div class="card border-t-4 border-amber-500">
+            <div class="text-slate-500 text-xs font-bold uppercase tracking-wide">最主要术式</div>
+            <div class="text-xl font-bold text-slate-800 mt-2 truncate" id="topCategory">-</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Group Analysis -->
+        <div class="card">
+            <h3 class="font-bold text-slate-700 mb-4 flex justify-between items-center">
+                各组手术总量
+                <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">组别对比</span>
+            </h3>
+            <div id="groupBarChart" class="w-full h-[350px]"></div>
+        </div>
+
+        <div class="card">
+            <h3 class="font-bold text-slate-700 mb-4 flex justify-between items-center">
+                各组术式构成
+                <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">结构分析</span>
+            </h3>
+            <div id="groupStackChart" class="w-full h-[350px]"></div>
+        </div>
+
+        <!-- Doctor Analysis -->
+        <div class="card lg:col-span-2">
+            <h3 class="font-bold text-slate-700 mb-4 flex justify-between items-center">
+                医生个人手术类型分布
+                <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">个人统计</span>
+            </h3>
+            <div id="doctorBarChart" class="w-full h-[450px]"></div>
+        </div>
+
+        <!-- Detail Analysis -->
+        <div class="card">
+            <h3 class="font-bold text-slate-700 mb-4">全科室手术类别占比</h3>
+            <div id="pieChart" class="w-full h-[350px]"></div>
+        </div>
+
+        <div class="card">
+            <h3 class="font-bold text-slate-700 mb-4">肺部手术细分：袖式 vs 常规</h3>
+            <div id="lungSunburstChart" class="w-full h-[350px]"></div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card overflow-hidden">
+        <div class="flex justify-between items-end mb-4">
+            <div>
+                <h3 class="font-bold text-slate-700">数据识别与修正明细</h3>
+                <p class="text-xs text-slate-500 mt-1">包含手动分类(优先)与自动识别结果</p>
+            </div>
+            <span class="text-xs text-slate-400">仅展示前200条</span>
+        </div>
+        <div class="overflow-x-auto border rounded-lg max-h-[600px] overflow-y-auto scroller">
+            <table class="min-w-full divide-y divide-slate-200 text-sm relative">
+                <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-600 w-24">医疗组</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-600 w-20">医生</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-600">原始手术名称</th>
+                         <th class="px-4 py-3 text-left font-semibold text-green-600 bg-green-50 w-32">备注分类</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-600 w-56">最终统计归类 (可修正)</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-slate-200" id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- Custom Sorting Configuration ---
+        const TARGET_GROUP_ORDER = ["一组", "二组", "三组","四组", "五组"];
+        const TARGET_DOCTOR_ORDER = [];
+
+        // --- Global State ---
+        let GLOBAL_RAW_DATA = [];
+        let GLOBAL_DOCTOR_LIST = [];
+        let DOCTOR_GROUP_MAP = {};
+        let CHART_INSTANCES = {};
+        let MANUAL_OVERRIDES = {};
+
+        // --- Anonymous Demo Data (synthetic, safe for public demonstration) ---
+        // All names and identifiers below are synthetic and intended only for UI demonstration.
+        const MOCK_DATA = `序号,医疗组,姓名,性别,年龄,ID,诊断,手术医生,手术名称,手术分类,手术日期,转出日期,赋值
+1,一组,患者001,男,61,DEMO001,纵隔占位,医生01,正中开胸纵隔肿物切除术+全胸腺切除术+血管成形术,纵隔,2025/1/9,2025/1/10,4
+2,一组,患者002,女,48,DEMO002,纵隔占位,医生02,VATS右进胸纵隔肿物切除术,,2025/1/12,2025/1/13,4
+3,二组,患者003,女,53,DEMO003,胸腔占位,医生03,正中开胸肿物切除+静脉成形术,胸部,2025/1/18,2025/1/20,4
+4,二组,患者004,男,55,DEMO004,肺部占位,医生04,VATS右肺上叶袖式切除术+淋巴结清扫术,肺部,2025/1/24,2025/1/26,4
+5,二组,患者005,女,44,DEMO005,肺部占位,医生04,正中开胸胸腔肿物切除+部分心包切除+右侧全肺切,胸部,2025/2/3,2025/2/6,4
+6,一组,患者006,男,70,DEMO006,肺部占位,医生01,VATS左肺下叶切除术+淋巴结清扫术,,2025/2/11,2025/2/13,4
+7,五组,患者007,男,50,DEMO007,食管占位,医生05,VATS胸腹腔镜联合食管根治术,食管,2025/2/18,2025/2/21,4
+8,五组,患者008,女,66,DEMO008,食管占位,医生05,左开胸食管根治术+淋巴结清扫术,食管,2025/3/2,2025/3/5,4
+9,一组,患者009,男,59,DEMO009,肺部占位,医生02,VATS右肺上叶袖式切除术+纵隔淋巴结清扫术,肺部,2025/3/11,2025/3/14,4
+10,一组,患者010,女,64,DEMO010,肺部占位,医生01,VATS右上叶袖式切除+淋巴结清扫术+肺动脉成形术,,2025/3/20,2025/3/23,4
+11,二组,患者011,男,67,DEMO011,肺部占位,医生03,VATS右肺上叶袖式切除术+淋巴结清扫术+肺大疱切除术,肺部,2025/4/8,2025/4/11,4
+12,二组,患者012,女,69,DEMO012,肺部占位,医生04,VATS辅助左肺上叶袖式切除术,肺部,2025/4/16,2025/4/19,4`;
+
+        // Classification Options
+        const CATEGORY_OPTIONS = [
+            { val: "食管手术|食管癌根治术", label: "食管手术 - 根治术" },
+            { val: "纵隔手术|纵隔肿瘤/胸腺切除", label: "纵隔手术 - 肿瘤/胸腺" },
+            { val: "胸部切除|巨大肿物/胸壁切除", label: "胸部切除 - 巨大肿物/胸壁" },
+            { val: "肺部手术|常规肺切除", label: "肺部手术 - 常规切除" },
+            { val: "肺部手术|袖式切除", label: "肺部手术 - 袖式切除" },
+            { val: "肺部手术|全肺切除", label: "肺部手术 - 全肺切除" },
+            { val: "肺部手术|楔形切除", label: "肺部手术 - 楔形切除" },
+            { val: "肺部手术|肺段切除", label: "肺部手术 - 肺段切除" },
+            { val: "其他手术|其他", label: "其他手术" }
+        ];
+
+        // --- Helper: Custom Sorter ---
+        function customSort(arr, referenceOrder) {
+            return arr.sort((a, b) => {
+                // Check if items are in the reference list
+                let idxA = referenceOrder.indexOf(a);
+                let idxB = referenceOrder.indexOf(b);
+
+                // Fuzzy match fallback for Groups if exact match fails
+                if (idxA === -1) idxA = referenceOrder.findIndex(ref => a.includes(ref));
+                if (idxB === -1) idxB = referenceOrder.findIndex(ref => b.includes(ref));
+
+                // If both in list, sort by index in reference list
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                // If A in list, A comes first
+                if (idxA !== -1) return -1;
+                // If B in list, B comes first
+                if (idxB !== -1) return 1;
+                // If neither, alphabetical/default
+                return a.localeCompare(b, 'zh');
+            });
+        }
+
+        // --- 1. Classification Logic ---
+        function classifySurgery(row, surgeryName) {
+            let userCat = row['手术分类'] || row['分类'] || row['类别'] || "";
+            userCat = userCat.trim();
+            let main = "", sub = "";
+
+            if (userCat) {
+                if (userCat.includes("食管")) { main = "食管手术"; sub = "食管癌根治术"; }
+                else if (userCat.includes("纵隔") || userCat.includes("胸腺")) { main = "纵隔手术"; sub = "纵隔肿瘤/胸腺切除"; }
+                else if (userCat.includes("胸")) { main = "胸部切除"; sub = "巨大肿物/胸壁切除"; }
+                else if (userCat.includes("肺")) { main = "肺部手术"; sub = detectLungSubtype(surgeryName); }
+            }
+
+            if (!main) {
+                const auto = classifySurgeryAuto(surgeryName);
+                main = auto.main; sub = auto.sub;
+            }
+            return { main, sub, userCat };
+        }
+
+        function classifySurgeryAuto(surgeryName) {
+            if (!surgeryName) return { main: "未知", sub: "未知" };
+            const firstTerm = surgeryName.split(/[+＋]/)[0].trim();
+            if (firstTerm.includes("食管")) return { main: "食管手术", sub: "食管癌根治术" };
+            if (firstTerm.includes("纵隔") || firstTerm.includes("胸腺")) return { main: "纵隔手术", sub: "纵隔肿瘤/胸腺切除" };
+            if (firstTerm.includes("巨大肿物") || firstTerm.includes("胸壁")) return { main: "胸部切除", sub: "巨大肿物/胸壁切除" };
+            if (firstTerm.includes("肺") || firstTerm.includes("叶") || firstTerm.includes("段") || firstTerm.includes("楔形")) {
+                return { main: "肺部手术", sub: detectLungSubtype(surgeryName) };
+            }
+            return { main: "其他手术", sub: "其他" };
+        }
+
+        function detectLungSubtype(name) {
+            if (!name) return "常规肺切除";
+            if (name.includes("袖式")) return "袖式切除";
+            if (name.includes("全肺")) return "全肺切除";
+            if (name.includes("楔形")) return "楔形切除";
+            if (name.includes("段")) return "肺段切除";
+            return "常规肺切除";
+        }
+
+        // --- 2. Data Loading ---
+        function loadData(csvContent) {
+            Papa.parse(csvContent, {
+                header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    if (results.errors.some(error => error.type === "Quotes")) {
+                        showMessage("文件存在 CSV 引号格式错误，请检查后重试。", "error");
+                        return;
+                    }
+                    let data = results.data;
+                    const hasSurgeryCol = results.meta.fields && results.meta.fields.some(field => field.trim() === "手术名称");
+                    if (!hasSurgeryCol) {
+                        Papa.parse(csvContent, {
+                            header: false,
+                            complete: function(rawRes) {
+                                const rows = rawRes.data;
+                                const headerIdx = rows.findIndex(r => r.some(c => c && c.includes("手术名称")));
+                                if (headerIdx !== -1) {
+                                    const headers = rows[headerIdx];
+                                    data = rows.slice(headerIdx + 1).map(row => {
+                                        let obj = {}; headers.forEach((h, i) => obj[h] = row[i]); return obj;
+                                    });
+                                    initApp(data);
+                                } else { showMessage("无法找到“手术名称”列，请检查 CSV 表头。", "error"); }
+                            }
+                        });
+                    } else { initApp(data); }
+                }
+            });
+        }
+
+        function initApp(data) {
+            GLOBAL_RAW_DATA = data.map((row, i) => {
+                const normalized = {};
+                Object.entries(row).forEach(([key, value]) => normalized[key.trim()] = typeof value === "string" ? value.trim() : value);
+                return { ...normalized, _internalId: i };
+            });
+            MANUAL_OVERRIDES = {};
+            DOCTOR_GROUP_MAP = {};
+
+            const doctors = new Set();
+            GLOBAL_RAW_DATA.forEach(r => {
+                if (r['手术医生'] && r['手术医生'].trim()) doctors.add(r['手术医生'].trim());
+            });
+            GLOBAL_DOCTOR_LIST = customSort(Array.from(doctors), TARGET_DOCTOR_ORDER);
+
+            GLOBAL_DOCTOR_LIST.forEach(doc => {
+                const rowWithGroup = GLOBAL_RAW_DATA.find(row => row['手术医生'] === doc && (row['医疗组'] || row['组别'] || row['医疗组别']));
+                DOCTOR_GROUP_MAP[doc] = rowWithGroup
+                    ? String(rowWithGroup['医疗组'] || rowWithGroup['组别'] || rowWithGroup['医疗组别']).trim()
+                    : "未分组";
+            });
+
+            renderSettings();
+            processAndRender();
+        }
+
+        // --- 3. Processing ---
+        function processAndRender() {
+            let stats = { total: 0, doctors: {}, groups: {}, categories: {}, lungSubtypes: {}, sleeveCount: 0 };
+            let rows = [];
+
+            GLOBAL_RAW_DATA.forEach(row => {
+                const doctor = row['手术医生'] ? row['手术医生'].trim() : '未知';
+                const surgery = row['手术名称'] || '';
+                if(!surgery) return;
+
+                let main, sub, userCat;
+                const override = MANUAL_OVERRIDES[row._internalId];
+                if (override) {
+                    const parts = override.split("|");
+                    main = parts[0]; sub = parts[1]; userCat = row['手术分类'] || "";
+                } else {
+                    const res = classifySurgery(row, surgery);
+                    main = res.main; sub = res.sub; userCat = res.userCat;
+                }
+
+                const group = DOCTOR_GROUP_MAP[doctor] || "未分组";
+                stats.total++;
+                if(sub === "袖式切除") stats.sleeveCount++;
+                stats.categories[main] = (stats.categories[main] || 0) + 1;
+                if(main === "肺部手术") stats.lungSubtypes[sub] = (stats.lungSubtypes[sub] || 0) + 1;
+                if(!stats.groups[group]) stats.groups[group] = {};
+                stats.groups[group][main] = (stats.groups[group][main] || 0) + 1;
+                if(!stats.doctors[doctor]) stats.doctors[doctor] = {};
+                stats.doctors[doctor][main] = (stats.doctors[doctor][main] || 0) + 1;
+
+                rows.push({ _id: row._internalId, group, doctor, original: surgery, userCat, main, sub });
+            });
+            updateDashboard(stats, rows);
+        }
+
+        // --- 4. Render Updates ---
+        function updateDashboard(stats, rows) {
+            document.getElementById('totalCount').innerText = stats.total;
+            document.getElementById('groupCount').innerText = Object.keys(stats.groups).length;
+            document.getElementById('sleeveCount').innerText = stats.sleeveCount;
+            let maxCat="-", maxV=0;
+            for(let c in stats.categories) if(stats.categories[c]>maxV){maxV=stats.categories[c];maxCat=c;}
+            document.getElementById('topCategory').innerText = maxCat;
+
+            const cats = ["肺部手术", "食管手术", "纵隔手术", "胸部切除", "其他手术"];
+            const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+            // --- Apply Custom Sorting Here ---
+            const gNames = customSort(Object.keys(stats.groups), TARGET_GROUP_ORDER);
+            const dNames = customSort(Object.keys(stats.doctors), TARGET_DOCTOR_ORDER);
+
+            const insideLabel = { show: true, position: 'inside', color: '#fff', fontWeight: 'bold', formatter: (p) => p.value > 0 ? p.value : '' };
+            const topLabel = { show: true, position: 'top', color: '#333', fontWeight: 'bold' };
+
+            // Group Volume
+            const groupTotals = gNames.map(g => cats.reduce((a,c)=>a+(stats.groups[g][c]||0),0));
+            renderChart('groupBarChart', {
+                tooltip: {trigger:'axis'}, grid: {top:30, bottom:30, left:40, right:20},
+                xAxis: {type:'category', data:gNames, axisLabel:{rotate:0}}, yAxis: {type:'value'},
+                series: [{ type:'bar', data:groupTotals, itemStyle:{color:'#4f46e5'}, name:'总手术量', barMaxWidth:50, label: topLabel }]
+            });
+
+            // Group Stacked
+            const groupSeries = cats.map((c, i) => ({
+                name: c, type: 'bar', stack: 'total', itemStyle: {color: colors[i]}, emphasis: {focus:'series'},
+                data: gNames.map(g => stats.groups[g][c] || 0), label: insideLabel
+            }));
+            renderChart('groupStackChart', {
+                tooltip: {trigger:'axis', axisPointer:{type:'shadow'}}, legend: {top:0, itemWidth:10, itemHeight:10},
+                grid: {top:30, bottom:20, left:40, right:10}, xAxis: {type:'value'}, yAxis: {type:'category', data:gNames},
+                series: groupSeries
+            });
+
+            // Doctor Stacked
+            const docSeries = cats.map((c, i) => ({
+                name: c, type: 'bar', stack: 'total', itemStyle: {color: colors[i]},
+                data: dNames.map(d => stats.doctors[d][c] || 0), label: insideLabel
+            }));
+
+            // Calculate Doctor Totals for Top Label
+            const docTotals = dNames.map(d => cats.reduce((a,c)=>a+(stats.doctors[d][c]||0),0));
+            docSeries.push({
+                name: '总计', type: 'bar', data: docTotals, barGap: '-100%', silent: true,
+                itemStyle: { color: 'transparent' },
+                label: { show: true, position: 'top', color: '#333', fontWeight: 'bold', formatter: (p) => p.value > 0 ? p.value : '' },
+                tooltip: { show: false }
+            });
+
+            renderChart('doctorBarChart', {
+                tooltip: {trigger:'axis', axisPointer:{type:'shadow'}}, legend: {top:0, data:cats},
+                grid: {bottom:70, left:40, right:10}, xAxis: {type:'category', data:dNames, axisLabel:{rotate:45, interval:0}},
+                yAxis: {type:'value'}, series: docSeries
+            });
+
+            // Pie & Sunburst
+            renderChart('pieChart', {
+                tooltip: {trigger:'item'}, legend: {bottom:0},
+                series: [{ type:'pie', radius:['40%','65%'], data:Object.keys(stats.categories).map((k,i)=>({value:stats.categories[k], name:k, itemStyle:{color:colors[i]}})), label: { show: true, formatter: '{b}: {c} ({d}%)' } }]
+            });
+
+            const lungD = Object.keys(stats.lungSubtypes).map(k=>({value:stats.lungSubtypes[k], name:k}));
+            renderChart('lungSunburstChart', {
+                tooltip: {trigger:'item'}, series: [{ type:'pie', radius:['30%','60%'], data:lungD.length?lungD:[{value:0,name:'无数据'}], color:['#818cf8','#a5b4fc','#c7d2fe'], label: { show: true, formatter: '{b}: {c}' } }]
+            });
+
+            // Table: build nodes explicitly so uploaded CSV text cannot inject HTML.
+            const tbody = document.getElementById('tableBody'); tbody.innerHTML = '';
+            rows.slice(0, 200).forEach(row => {
+                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition";
+                const currentVal = `${row.main}|${row.sub}`;
+                const selectClass = MANUAL_OVERRIDES[row._id] !== undefined ? "bg-orange-50 border-orange-300 text-orange-700 font-semibold" : "bg-white border-slate-200 text-slate-700";
+
+                const values = [row.group, row.doctor, row.original];
+                values.forEach((value, index) => {
+                    const td = document.createElement('td');
+                    td.className = index === 0
+                        ? "px-4 py-2 font-medium text-slate-800"
+                        : index === 1 ? "px-4 py-2" : "px-4 py-2 text-slate-500 text-xs truncate max-w-[150px]";
+                    td.textContent = value;
+                    if (index === 2) td.title = value;
+                    tr.appendChild(td);
+                });
+
+                const categoryCell = document.createElement('td'); categoryCell.className = "px-4 py-2";
+                const categoryBadge = document.createElement('span');
+                categoryBadge.className = row.userCat ? "px-2 py-0.5 rounded bg-green-100 text-green-800 text-xs font-bold" : "text-gray-300 text-xs";
+                categoryBadge.textContent = row.userCat || "-";
+                categoryCell.appendChild(categoryBadge);
+                tr.appendChild(categoryCell);
+
+                const selectCell = document.createElement('td'); selectCell.className = "px-4 py-2";
+                const select = document.createElement('select');
+                select.className = `custom-select w-full text-xs border rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${selectClass}`;
+                select.setAttribute('aria-label', `修正第 ${row._id + 1} 条数据的统计归类`);
+                CATEGORY_OPTIONS.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.val; option.textContent = opt.label; option.selected = opt.val === currentVal;
+                    select.appendChild(option);
+                });
+                select.addEventListener('change', () => window.handleCategoryChange(row._id, select.value));
+                selectCell.appendChild(select); tr.appendChild(selectCell);
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.handleCategoryChange = function(rowId, newValue) { MANUAL_OVERRIDES[rowId] = newValue; processAndRender(); };
+
+        function renderChart(id, opt) {
+            const dom = document.getElementById(id);
+            if (!dom) return; // Basic safety check
+
+            // Safety check for ECharts
+            if (typeof echarts === 'undefined') {
+                console.error("ECharts library not loaded");
+                return;
+            }
+
+            if(CHART_INSTANCES[id]) CHART_INSTANCES[id].dispose();
+            CHART_INSTANCES[id] = echarts.init(dom);
+            CHART_INSTANCES[id].setOption(opt);
+        }
+
+        function renderSettings() {
+            const container = document.getElementById('doctorGroupInputs'); container.innerHTML = '';
+            GLOBAL_DOCTOR_LIST.forEach(doc => {
+                const div = document.createElement('div'); div.className = "flex items-center bg-white border border-slate-200 rounded p-2 shadow-sm";
+                const label = document.createElement('label');
+                label.className = "w-20 text-xs font-bold text-slate-600 truncate mr-2";
+                label.title = doc; label.textContent = doc;
+                const input = document.createElement('input');
+                input.type = "text"; input.setAttribute('list', 'groupList'); input.dataset.doc = doc;
+                input.value = DOCTOR_GROUP_MAP[doc]; input.setAttribute('aria-label', `${doc}的医疗组`);
+                input.className = "flex-1 text-xs border-b border-slate-300 focus:border-indigo-500 outline-none bg-transparent py-1";
+                div.append(label, input);
+                container.appendChild(div);
+            });
+        }
+        window.toggleSettings = function() {
+            const panel = document.getElementById('groupSettingsPanel');
+            const toggle = document.getElementById('groupSettingsToggle');
+            const isExpanded = !panel.classList.toggle('hidden');
+            toggle.setAttribute('aria-expanded', String(isExpanded));
+            document.getElementById('toggleIcon').classList.toggle('rotate-180', isExpanded);
+        };
+        window.applyGroupSettings = function() { document.querySelectorAll('#doctorGroupInputs input').forEach(inp => DOCTOR_GROUP_MAP[inp.dataset.doc] = inp.value.trim()); processAndRender(); };
+
+        function showMessage(message, type = "info") {
+            const status = document.getElementById('fileStatus');
+            status.textContent = message;
+            status.className = `text-xs mt-2 text-right ${type === "error" ? "text-rose-600 font-semibold" : "text-slate-500"}`;
+        }
+
+        // --- Initialization with Load Check ---
+
+        window.onload = function() {
+             if(!document.getElementById('groupList')) {
+                const dl = document.createElement('datalist');
+                dl.id = 'groupList';
+                TARGET_GROUP_ORDER.forEach(g => { const op=document.createElement('option'); op.value=g; dl.append(op); });
+                document.body.append(dl);
+            }
+
+            // Check for library readiness
+            if (typeof Papa === 'undefined' || typeof echarts === 'undefined') {
+                showMessage("资源库加载失败，请检查网络连接后刷新页面。", "error");
+                return;
+            }
+
+            document.getElementById('csvInput').addEventListener('change', e => {
+                const f = e.target.files[0];
+                if(f) {
+                    const r = new FileReader();
+                    r.onload=(ev)=>{
+                        showMessage(`当前展示：${f.name}（仅本地解析）`);
+                        loadData(ev.target.result);
+                    };
+                    r.onerror=()=>showMessage("文件读取失败，请重试。", "error");
+                    r.readAsText(f, "UTF-8");
+                }
+            });
+
+            window.addEventListener('resize', ()=> {
+                if(CHART_INSTANCES) {
+                    Object.values(CHART_INSTANCES).forEach(c=>c && c.resize());
+                }
+            });
+
+            // Start App
+            loadData(MOCK_DATA);
+        };
+    </script>
+</body>
+</html>

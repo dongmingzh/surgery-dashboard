@@ -7,7 +7,7 @@
 ![Excel](https://img.shields.io/badge/Excel-XLSX%20%7C%20XLS-217346?logo=microsoftexcel&logoColor=white)
 ![Privacy](https://img.shields.io/badge/data-local--only-087F72)
 
-[在线体验](https://donoghzzz.github.io/surgery-dashboard/) · [安全说明](SECURITY.md)
+[在线体验](https://dongmingzh.github.io/surgery-dashboard/) · [安全说明](SECURITY.md)
 
 ![看板预览](docs/dashboard-preview.png)
 
@@ -44,7 +44,7 @@
 
 ### 第三步：导入并查看结果
 
-1. 打开 [在线手术看板](https://donoghzzz.github.io/surgery-dashboard/)。
+1. 打开 [在线手术看板](https://dongmingzh.github.io/surgery-dashboard/)。
 2. 点击页面右上角 **“导入 Excel / CSV”**。
 3. 选择刚才准备好的 `.xlsx`、`.xls` 或 `.csv` 文件。
 4. 等待几秒，页面显示文件名和识别到的手术条数，即表示导入成功。
@@ -190,6 +190,7 @@ surgery-dashboard/
 ├── app.js                     # 数据解析、指标计算、筛选与图表逻辑
 ├── docs/dashboard-preview.png # README 预览图
 ├── README.md                  # 使用说明与字段口径
+├── LICENSE                    # MIT 开源许可证
 ├── SECURITY.md                # 安全报告指南
 └── .gitignore                 # 本地文件忽略规则
 ```
@@ -223,4 +224,6 @@ surgery-dashboard/
 
 ## 许可
 
-本仓库当前未附加开源许可证。公开可见不等于自动授予复制、修改、再分发或商业使用权限。
+本项目采用 [MIT License](LICENSE) 开源。你可以自由使用、复制、修改、合并、发布、分发、再许可或销售本软件，但需要保留原始版权声明和许可证文本。
+
+本软件按“原样”提供，不附带任何形式的担保。用于医疗数据分析时，使用者仍需自行完成数据脱敏、结果复核，并遵守所在机构制度和适用法律法规。

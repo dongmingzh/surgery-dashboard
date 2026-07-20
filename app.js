@@ -34,25 +34,91 @@
         { val: "其他手术|其他", label: "其他手术" }
     ];
 
-    const DEMO_CSV = `序号,医疗组,性别,年龄,诊断,手术医生,手术名称,手术分类,手术日期,手术时长（分钟）,术中出血量,是否急诊,是否微创,术后住院日,手术级别,并发症,转归
-1,一组,男,61,纵隔占位,医生01,正中开胸纵隔肿物切除术+全胸腺切除术+血管成形术,纵隔,2025/1/9,210,260,否,否,8,四级,无,出院
-2,一组,女,48,纵隔占位,医生02,VATS右进胸纵隔肿物切除术,,2025/1/12,145,80,否,是,4,三级,无,出院
-3,二组,女,53,胸腔占位,医生03,正中开胸肿物切除+静脉成形术,胸部,2025/1/18,235,320,否,否,9,四级,无,出院
-4,二组,男,55,肺部占位,医生04,VATS右肺上叶袖式切除术+淋巴结清扫术,肺部,2025/1/24,280,180,否,是,7,四级,无,出院
-5,二组,女,44,肺部占位,医生04,正中开胸胸腔肿物切除+部分心包切除+右侧全肺切,胸部,2025/2/3,310,450,否,否,11,四级,有,出院
-6,一组,男,70,肺部占位,医生01,VATS左肺下叶切除术+淋巴结清扫术,,2025/2/11,165,100,否,是,5,三级,无,出院
-7,五组,男,50,食管占位,医生05,VATS胸腹腔镜联合食管根治术,食管,2025/2/18,295,220,否,是,9,四级,无,出院
-8,五组,女,66,食管占位,医生05,左开胸食管根治术+淋巴结清扫术,食管,2025/3/2,325,360,否,否,10,四级,无,出院
-9,一组,男,59,肺部占位,医生02,VATS右肺上叶袖式切除术+纵隔淋巴结清扫术,肺部,2025/3/11,260,150,否,是,6,四级,无,出院
-10,一组,女,64,肺部占位,医生01,VATS右上叶袖式切除+淋巴结清扫术+肺动脉成形术,,2025/3/20,275,190,否,是,7,四级,无,出院
-11,二组,男,67,肺部占位,医生03,VATS右肺上叶袖式切除术+淋巴结清扫术+肺大疱切除术,肺部,2025/4/8,255,140,否,是,6,四级,无,出院
-12,二组,女,69,肺部占位,医生04,VATS辅助左肺上叶袖式切除术,肺部,2025/4/16,245,130,否,是,6,四级,无,出院
-13,三组,女,42,肺结节,医生06,胸腔镜右肺上叶楔形切除术,肺部,2025/4/22,90,30,否,是,3,二级,无,出院
-14,三组,男,73,肺部占位,医生06,急诊开胸探查+肺破裂修补术,肺部,2025/4/27,180,500,是,否,12,三级,有,出院
-15,一组,女,38,肺结节,医生02,胸腔镜左肺上叶肺段切除术,肺部,2025/5/6,135,60,否,是,4,三级,无,出院
-16,五组,男,62,食管占位,医生05,胸腹腔镜联合食管根治术,食管,2025/5/14,305,240,否,是,8,四级,无,出院
-17,二组,女,57,肺部占位,医生03,VATS右肺中叶切除+淋巴结清扫,肺部,2025/5/21,175,95,否,是,5,三级,无,出院
-18,一组,男,65,纵隔占位,医生01,胸腔镜纵隔肿物切除术,纵隔,2025/5/28,125,55,否,是,4,三级,无,出院`;
+    const DEMO_MONTHLY_MIX = [
+        [3, 1, 1, 1, 0], [3, 2, 1, 1, 0], [4, 1, 2, 1, 0], [3, 2, 1, 1, 0],
+        [5, 1, 1, 1, 1], [5, 2, 2, 1, 0], [3, 2, 1, 1, 1], [4, 2, 1, 2, 0],
+        [6, 2, 2, 1, 0], [5, 2, 1, 1, 1], [7, 2, 2, 1, 0], [7, 3, 1, 1, 1]
+    ];
+    const DEMO_PROFILES = [
+        {
+            category: "肺部", diagnosis: ["肺结节", "肺部占位", "肺癌术后复查异常"], doctors: ["医生01", "医生01", "医生02", "医生03", "医生03", "医生04", "医生07"],
+            procedures: [
+                ["VATS右肺上叶切除术+淋巴结清扫术", true, 175, 90, 5], ["胸腔镜左肺下叶切除术+淋巴结清扫术", true, 190, 105, 6],
+                ["机器人辅助右肺中叶切除术", true, 205, 70, 5], ["VATS右肺上叶袖式切除术+纵隔淋巴结清扫术", true, 275, 170, 7],
+                ["开胸左全肺切除术+淋巴结清扫术", false, 315, 420, 11], ["胸腔镜右肺上叶楔形切除术", true, 95, 35, 3],
+                ["VATS左肺上叶肺段切除术", true, 145, 55, 4]
+            ]
+        },
+        {
+            category: "食管", diagnosis: ["食管占位", "食管恶性肿瘤", "食管高级别上皮内瘤变"], doctors: ["医生05", "医生05", "医生08", "医生08", "医生02"],
+            procedures: [
+                ["胸腹腔镜联合食管癌根治术", true, 305, 220, 9], ["机器人辅助食管癌根治术", true, 285, 160, 8],
+                ["左开胸食管癌根治术+淋巴结清扫术", false, 345, 390, 12], ["胸腔镜食管良性肿物切除术", true, 155, 65, 5]
+            ]
+        },
+        {
+            category: "纵隔", diagnosis: ["纵隔占位", "胸腺占位", "纵隔囊肿"], doctors: ["医生01", "医生06", "医生06", "医生07"],
+            procedures: [
+                ["胸腔镜纵隔肿物切除术", true, 130, 55, 4], ["机器人辅助全胸腺切除术", true, 165, 70, 5],
+                ["正中开胸纵隔肿物切除术+血管成形术", false, 250, 310, 9]
+            ]
+        },
+        {
+            category: "胸部", diagnosis: ["胸壁占位", "胸腔巨大肿物", "胸膜占位"], doctors: ["医生03", "医生04", "医生06"],
+            procedures: [
+                ["胸壁肿物扩大切除术+胸壁重建术", false, 225, 260, 8], ["胸腔镜胸膜肿物切除术", true, 120, 60, 4],
+                ["开胸巨大胸腔肿物切除术", false, 290, 480, 12]
+            ]
+        },
+        {
+            category: "其他", diagnosis: ["自发性气胸", "脓胸", "多发肋骨骨折"], doctors: ["医生07", "医生08"],
+            procedures: [
+                ["胸腔镜肺大疱切除术+胸膜固定术", true, 105, 40, 3], ["胸腔镜脓胸清除术", true, 135, 85, 5],
+                ["急诊开胸探查术+止血术", false, 185, 520, 10], ["肋骨骨折切开复位内固定术", false, 150, 120, 6]
+            ]
+        }
+    ];
+    const DEMO_GROUPS = { "医生01": "一组", "医生02": "一组", "医生03": "二组", "医生04": "二组", "医生05": "三组", "医生06": "三组", "医生07": "四组", "医生08": "四组" };
+
+    function buildDemoData() {
+        const rows = [];
+        let sequence = 0;
+        DEMO_MONTHLY_MIX.forEach((mix, monthIndex) => {
+            mix.forEach((count, profileIndex) => {
+                const profile = DEMO_PROFILES[profileIndex];
+                for (let localIndex = 0; localIndex < count; localIndex++) {
+                    const procedure = profile.procedures[(monthIndex + localIndex * 2 + profileIndex) % profile.procedures.length];
+                    const doctor = profile.doctors[(sequence + monthIndex + localIndex) % profile.doctors.length];
+                    const day = 3 + ((sequence * 5 + profileIndex * 3) % 25);
+                    const durationOffset = ((sequence * 13) % 41) - 20;
+                    const bloodOffset = ((sequence * 17) % 61) - 30;
+                    const losOffset = ((sequence * 7) % 3) - 1;
+                    const emergency = procedure[0].includes("急诊");
+                    rows.push({
+                        "序号": sequence + 1,
+                        "医疗组": DEMO_GROUPS[doctor],
+                        "性别": (sequence + profileIndex) % 3 === 0 ? "女" : "男",
+                        "年龄": 34 + ((sequence * 9 + profileIndex * 7) % 43),
+                        "诊断": profile.diagnosis[(sequence + monthIndex) % profile.diagnosis.length],
+                        "手术医生": doctor,
+                        "手术名称": procedure[0],
+                        "手术分类": profile.category,
+                        "手术日期": `2025/${monthIndex + 1}/${day}`,
+                        "手术时长（分钟）": Math.max(65, procedure[2] + durationOffset),
+                        "术中出血量": Math.max(20, procedure[3] + bloodOffset),
+                        "是否急诊": emergency ? "是" : "否",
+                        "是否微创": procedure[1] ? "是" : "否",
+                        "术后住院日": Math.max(2, procedure[4] + losOffset),
+                        "手术级别": procedure[2] >= 250 ? "四级" : procedure[2] >= 145 ? "三级" : "二级",
+                        "并发症": sequence % 19 === 7 || (emergency && sequence % 2 === 0) ? "有" : "无",
+                        "转归": sequence === 83 ? "转院" : "出院"
+                    });
+                    sequence++;
+                }
+            });
+        });
+        return rows;
+    }
 
     const state = {
         raw: [], derived: [], filtered: [], doctorGroups: {}, overrides: {}, charts: {}, sourceName: "匿名合成演示数据"
@@ -118,6 +184,7 @@
         else if (declared.includes("纵隔") || declared.includes("胸腺")) { main = "纵隔手术"; sub = "纵隔肿瘤/胸腺切除"; }
         else if (declared.includes("胸")) { main = "胸部切除"; sub = "巨大肿物/胸壁切除"; }
         else if (declared.includes("肺")) { main = "肺部手术"; sub = detectLungSubtype(surgery); }
+        else if (declared.includes("其他")) { main = "其他手术"; sub = "其他"; }
         if (!main) {
             const first = surgery.split(/[+＋]/)[0];
             if (first.includes("食管")) { main = "食管手术"; sub = "食管癌根治术"; }
@@ -355,7 +422,7 @@
             ]
         });
         const categoryData = sortedKeys(stats.categories, CATEGORY_ORDER).map((name, index) => ({ name, value: stats.categories[name], itemStyle: { color: COLORS[index % COLORS.length] } }));
-        renderChart("categoryPieChart", { tooltip: { trigger: "item", formatter: "{b}<br/>{c} 台 · {d}%" }, legend: { bottom: 4, itemWidth: 9, itemHeight: 9 }, series: [{ type: "pie", radius: ["48%", "70%"], center: ["50%", "44%"], padAngle: 2, itemStyle: { borderRadius: 5, borderColor: "#fff", borderWidth: 2 }, label: { formatter: "{b}\n{d}%", color: "#405b6d" }, data: categoryData }] });
+        renderChart("categoryPieChart", { tooltip: { trigger: "item", formatter: "{b}<br/>{c} 台 · {d}%" }, legend: { bottom: 4, itemWidth: 9, itemHeight: 9 }, series: [{ type: "pie", radius: ["48%", "70%"], center: ["50%", "44%"], padAngle: 2, itemStyle: { borderRadius: 5, borderColor: "#fff", borderWidth: 2 }, label: { show: false }, emphasis: { label: { show: true, formatter: "{b}\n{d}%", color: "#274254", fontWeight: 700 } }, data: categoryData }] });
         const groups = sortedKeys(stats.groups, GROUP_ORDER), categories = CATEGORY_ORDER;
         renderChart("groupStackChart", { tooltip: { trigger: "axis", axisPointer: { type: "shadow" } }, legend: { top: 8, itemWidth: 9, itemHeight: 9, data: categories }, grid: { top: 56, left: 64, right: 18, bottom: 34 }, xAxis: { type: "value", minInterval: 1, splitLine: { lineStyle: { color: "#edf2f5" } } }, yAxis: { type: "category", data: groups, axisLine: { show: false }, axisTick: { show: false } }, series: categories.map((category, index) => ({ name: category, type: "bar", stack: "total", barMaxWidth: 34, itemStyle: { color: COLORS[index], borderRadius: index === categories.length - 1 ? [0, 5, 5, 0] : 0 }, label: { show: true, position: "inside", formatter: p => p.value ? p.value : "", color: "#fff", fontWeight: 700 }, data: groups.map(group => stats.groups[group][category] || 0) })) });
         const doctors = sortedKeys(stats.doctors).sort((a, b) => Object.values(stats.doctors[b]).reduce((x, y) => x + y, 0) - Object.values(stats.doctors[a]).reduce((x, y) => x + y, 0));
@@ -477,8 +544,7 @@
         if (typeof Papa === "undefined" || typeof XLSX === "undefined" || typeof echarts === "undefined") return showStatus("资源库加载失败，请检查网络后刷新页面。", true);
         const datalist = document.createElement("datalist"); datalist.id = "groupList"; GROUP_ORDER.filter(group => group !== "未分组").forEach(group => { const option = document.createElement("option"); option.value = group; datalist.appendChild(option); }); document.body.appendChild(datalist);
         bindEvents();
-        const demo = Papa.parse(DEMO_CSV, { header: true, skipEmptyLines: true }).data;
-        initializeData(demo, "匿名合成演示数据");
+        initializeData(buildDemoData(), "匿名合成演示数据");
     }
 
     window.addEventListener("DOMContentLoaded", initialize);

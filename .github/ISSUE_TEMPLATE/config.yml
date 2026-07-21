@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: SECURITY.md — 安全与敏感数据报告
+    url: https://github.com/dongmingzh/surgery-dashboard/blob/main/SECURITY.md
+    about: 如发现敏感数据泄露或安全问题，请先阅读安全政策，不要公开发布。
+  - name: CONTRIBUTING.md — 贡献指南
+    url: https://github.com/dongmingzh/surgery-dashboard/blob/main/CONTRIBUTING.md
+    about: 查看贡献流程、开发环境和提交自检清单。
+  - name: CODE_OF_CONDUCT.md — 行为准则
+    url: https://github.com/dongmingzh/surgery-dashboard/blob/main/CODE_OF_CONDUCT.md
+    about: 举报违反行为准则的事件，请先阅读行为准则中的报告流程。

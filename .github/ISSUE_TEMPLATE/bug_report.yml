@@ -1,0 +1,85 @@
+name: 报告 Bug
+description: 提交一个问题或非预期行为
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你花时间报告问题！请使用 **完全合成的测试数据** 复现，不要提交真实医疗数据。
+
+  - type: input
+    id: summary
+    attributes:
+      label: 问题简述
+      description: 用一句话说明发生了什么问题
+      placeholder: 例如：导入 CSV 后微创率显示为 "--"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 如何复现这个问题？请提供操作步骤。
+      placeholder: |
+        1. 打开页面
+        2. 点击 "导入 Excel / CSV"
+        3. 选择附件中的测试文件 test_data.csv
+        4. 看到微创率显示 "--" 而非百分比
+      value: |
+        1.
+        2.
+        3.
+        4.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+      description: 你期望看到什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+      description: 实际发生了什么？如有错误信息，请贴出浏览器控制台的截图或文本。
+    validations:
+      required: true
+
+  - type: textarea
+    id: testdata
+    attributes:
+      label: 复现用测试数据
+      description: |
+        请附上能复现此问题的 **测试数据文件或数据片段**。这些数据必须是完全合成的（不可包含任何真实患者或医务人员信息）。
+        你可以手动构造几行 CSV，或使用 "下载数据模板" 生成的模板稍加修改。
+      placeholder: |
+        可粘贴 CSV 片段（3-5 行即可），或描述测试数据特征
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: 浏览器与环境
+      description: 你使用的浏览器名称和版本
+      placeholder: Chrome 120, Firefox 121, Edge 120 等
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图（可选）
+      description: |
+        如有截图，请确保截图中 **不包含真实患者数据或医疗标识符**。
+        你可以用演示数据或脱敏后的数据截图。
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ⚠️ **隐私提醒**：请确认你提交的附件、截图和数据片段中 **不包含任何真实患者信息、医务人员姓名或医院标识**。如不慎包含，请按 [SECURITY.md](https://github.com/dongmingzh/surgery-dashboard/blob/main/SECURITY.md) 处理。

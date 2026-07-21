@@ -1,85 +1,82 @@
 name: 报告 Bug
-description: 提交一个问题或非预期行为
+description: 告诉我们哪里没有按预期工作
+title: "[Bug] "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        感谢你花时间报告问题！请使用 **完全合成的测试数据** 复现，不要提交真实医疗数据。
+        感谢你帮助改进项目。能够稳定复现的简短步骤，比很长的描述更有帮助。
 
-  - type: input
-    id: summary
+        请只使用看板自带的演示数据或完全合成的测试数据。如果问题涉及漏洞或真实敏感数据，不要继续填写本表单，请改用“申请私下联系”。
+
+  - type: dropdown
+    id: area
     attributes:
-      label: 问题简述
-      description: 用一句话说明发生了什么问题
-      placeholder: 例如：导入 CSV 后微创率显示为 "--"
+      label: 问题出现在哪里？
+      options:
+        - Excel/CSV 导入
+        - 指标计算或数据分类
+        - 筛选、重置或搜索
+        - 图表或明细表
+        - 导出结果
+        - 页面布局或手机端
+        - 文档或其他
     validations:
       required: true
 
   - type: textarea
     id: steps
     attributes:
-      label: 复现步骤
-      description: 如何复现这个问题？请提供操作步骤。
+      label: 怎样复现？
+      description: 从打开页面开始，列出最少的必要步骤
       placeholder: |
-        1. 打开页面
-        2. 点击 "导入 Excel / CSV"
-        3. 选择附件中的测试文件 test_data.csv
-        4. 看到微创率显示 "--" 而非百分比
-      value: |
-        1.
-        2.
-        3.
-        4.
+        1. 打开在线看板
+        2. 导入附件中的合成 CSV
+        3. 选择“一组”
+        4. 月度趋势图变为空白
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: 期望结果
-      description: 你期望看到什么？
+      label: 你原本期望什么？
     validations:
       required: true
 
   - type: textarea
     id: actual
     attributes:
-      label: 实际结果
-      description: 实际发生了什么？如有错误信息，请贴出浏览器控制台的截图或文本。
-    validations:
-      required: true
-
-  - type: textarea
-    id: testdata
-    attributes:
-      label: 复现用测试数据
-      description: |
-        请附上能复现此问题的 **测试数据文件或数据片段**。这些数据必须是完全合成的（不可包含任何真实患者或医务人员信息）。
-        你可以手动构造几行 CSV，或使用 "下载数据模板" 生成的模板稍加修改。
-      placeholder: |
-        可粘贴 CSV 片段（3-5 行即可），或描述测试数据特征
+      label: 实际发生了什么？
+      description: 如有控制台错误，可粘贴不含敏感信息的错误文本
     validations:
       required: true
 
   - type: input
-    id: browser
+    id: environment
     attributes:
-      label: 浏览器与环境
-      description: 你使用的浏览器名称和版本
-      placeholder: Chrome 120, Firefox 121, Edge 120 等
+      label: 浏览器和设备
+      placeholder: 例如：Chrome 126 / macOS，或 Safari / iPhone
     validations:
       required: true
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: 合成复现数据（可选）
+      description: 只在问题与导入数据有关时提供；几行合成 CSV 通常就够了
 
   - type: textarea
     id: screenshots
     attributes:
       label: 截图（可选）
-      description: |
-        如有截图，请确保截图中 **不包含真实患者数据或医疗标识符**。
-        你可以用演示数据或脱敏后的数据截图。
-  - type: markdown
+      description: 上传前请检查标签、悬停提示、明细表和文件名
+
+  - type: checkboxes
+    id: privacy
     attributes:
-      value: |
-        ---
-        ⚠️ **隐私提醒**：请确认你提交的附件、截图和数据片段中 **不包含任何真实患者信息、医务人员姓名或医院标识**。如不慎包含，请按 [SECURITY.md](https://github.com/dongmingzh/surgery-dashboard/blob/main/SECURITY.md) 处理。
+      label: 隐私确认
+      options:
+        - label: 我确认本 Issue 及其附件不包含真实患者、医务人员、医院内部信息或其他敏感数据
+          required: true

@@ -7,7 +7,7 @@
 ![Excel](https://img.shields.io/badge/Excel-XLSX%20%7C%20XLS-217346?logo=microsoftexcel&logoColor=white)
 ![Privacy](https://img.shields.io/badge/data-local--only-087F72)
 
-[在线体验](https://dongmingzh.github.io/surgery-dashboard/) · [安全说明](SECURITY.md)
+[在线体验](https://dongmingzh.github.io/surgery-dashboard/) · [获取帮助](SUPPORT.md) · [参与贡献](CONTRIBUTING.md) · [安全说明](SECURITY.md)
 
 ![看板预览](docs/dashboard-preview.png)
 
@@ -184,8 +184,12 @@ surgery-dashboard/
 ├── app.js                     # 数据解析、指标计算、筛选与图表逻辑
 ├── docs/dashboard-preview.png # README 预览图
 ├── README.md                  # 使用说明与字段口径
+├── CONTRIBUTING.md            # 贡献流程与验收建议
+├── CODE_OF_CONDUCT.md         # 社区行为准则
+├── SUPPORT.md                 # 求助入口与项目边界
 ├── LICENSE                    # MIT 开源许可证
 ├── SECURITY.md                # 安全报告指南
+├── .github/                   # Issue 和 Pull Request 模板
 └── .gitignore                 # 本地文件忽略规则
 ```
 

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 先看贡献指南
+    url: https://github.com/dongmingzh/surgery-dashboard/blob/main/CONTRIBUTING.md
+    about: 了解如何报告问题、在本地运行项目并提交 Pull Request。
+  - name: 安全政策
+    url: https://github.com/dongmingzh/surgery-dashboard/blob/main/SECURITY.md
+    about: 涉及漏洞、凭据或敏感数据时，请先阅读此文档，不要公开细节。
+  - name: 在线体验看板
+    url: https://dongmingzh.github.io/surgery-dashboard/
+    about: 使用项目自带的合成数据体验当前版本。

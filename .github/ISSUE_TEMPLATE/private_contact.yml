@@ -1,0 +1,31 @@
+name: 申请私下联系
+description: 仅用于请求维护者安排私密沟通，请勿填写事件细节
+title: "[Private contact] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        这个 Issue 会公开显示。它只用于请求维护者安排后续的私密沟通方式。
+
+        **请不要填写漏洞细节、敏感数据、人员身份、凭据、系统地址或行为事件细节。**
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: 联系类型
+      description: 只需选择大类，不要在公开页面补充细节
+      options:
+        - 安全漏洞或凭据问题
+        - 敏感或真实医疗数据暴露
+        - 社区行为准则问题
+        - 其他需要私密沟通的问题
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: acknowledgement
+    attributes:
+      label: 公开信息确认
+      options:
+        - label: 我确认本 Issue 不包含任何事件细节、敏感数据、个人信息或凭据
+          required: true

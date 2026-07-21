@@ -1,0 +1,82 @@
+name: 报告 Bug
+description: 告诉我们哪里没有按预期工作
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你帮助改进项目。能够稳定复现的简短步骤，比很长的描述更有帮助。
+
+        请只使用看板自带的演示数据或完全合成的测试数据。如果问题涉及漏洞或真实敏感数据，不要继续填写本表单，请改用“申请私下联系”。
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 问题出现在哪里？
+      options:
+        - Excel/CSV 导入
+        - 指标计算或数据分类
+        - 筛选、重置或搜索
+        - 图表或明细表
+        - 导出结果
+        - 页面布局或手机端
+        - 文档或其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 怎样复现？
+      description: 从打开页面开始，列出最少的必要步骤
+      placeholder: |
+        1. 打开在线看板
+        2. 导入附件中的合成 CSV
+        3. 选择“一组”
+        4. 月度趋势图变为空白
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 你原本期望什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际发生了什么？
+      description: 如有控制台错误，可粘贴不含敏感信息的错误文本
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: 浏览器和设备
+      placeholder: 例如：Chrome 126 / macOS，或 Safari / iPhone
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: 合成复现数据（可选）
+      description: 只在问题与导入数据有关时提供；几行合成 CSV 通常就够了
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图（可选）
+      description: 上传前请检查标签、悬停提示、明细表和文件名
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 隐私确认
+      options:
+        - label: 我确认本 Issue 及其附件不包含真实患者、医务人员、医院内部信息或其他敏感数据
+          required: true
